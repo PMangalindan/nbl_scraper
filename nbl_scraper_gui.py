@@ -73,7 +73,7 @@ class PBPExtractor(QWidget):
             self.output_text.setPlainText("❌ Please enter a URL")
             return
 
-        self.output_text.setPlainText("⏳ Running Playwright... Please wait.")
+        self.output_text.setPlainText("⏳ Running... Please wait.")
 
         # Run Playwright in a separate thread
         self.thread = PBPThread(url)
