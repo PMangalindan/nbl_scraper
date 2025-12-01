@@ -52,19 +52,29 @@ def extract_pbp(url):
     try:
         logs.append("Launching browser…")
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            # Add extra flags to avoid crashes on headless Linux
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-blink-features=AutomationControlled",
+                ]
+            )
 
             logs.append("Opening new page…")
             page = browser.new_page()
 
             logs.append(f"Visiting URL: {url}")
-            page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            # Use networkidle to reduce chance of crash
+            page.goto(url, wait_until="networkidle", timeout=90000)
 
             logs.append("Clicking 'Play By Play' tab…")
             page.click('button:has-text("Play By Play")')
 
             logs.append("Waiting for Play By Play events to load…")
-            page.wait_for_selector(".sw-fixture-pbp-event", timeout=20000)
+            page.wait_for_selector(".sw-fixture-pbp-event", timeout=30000)
 
             logs.append("Extracting text…")
             pbp_text = page.eval_on_selector(
@@ -76,7 +86,6 @@ def extract_pbp(url):
             browser.close()
 
         logs.append("Saving pbp_text.txt…")
-
         with open("pbp_text.txt", "w", encoding="utf-8") as f:
             f.write(pbp_text)
 
